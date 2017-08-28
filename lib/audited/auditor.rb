@@ -221,7 +221,11 @@ module Audited
       def write_audit(attrs)
         attrs[:associated] = send(audit_associated_with) unless audit_associated_with.nil?
         self.audit_comment = nil
-        run_callbacks(:audit)  { audits.create(attrs) } if auditing_enabled
+        if Audited.audit_controller.present?
+          Audited.audit_controller.process_audits(attrs, self, Audited.store)
+        else
+          run_callbacks(:audit)  { audits.create(attrs) } if auditing_enabled
+        end
       end
 
       def require_comment
