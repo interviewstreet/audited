@@ -287,11 +287,15 @@ module Audited
         self.audit_comment = nil
 
         if auditing_enabled
-          run_callbacks(:audit) {
-            audit = audits.create(attrs)
-            combine_audits_if_needed if attrs[:action] != 'create'
-            audit
-          }
+          begin
+            Audited.process_audits(attrs, self, Audited.store)
+          rescue NoMethodError => e
+            run_callbacks(:audit) {
+              audit = audits.create(attrs)
+              combine_audits_if_needed if attrs[:action] != 'create'
+              audit
+            }
+          end
         end
       end
 
